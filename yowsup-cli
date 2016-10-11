@@ -251,6 +251,13 @@ class DemosArgParser(YowArgParser):
         echoOpts = self.add_argument_group("Echo client demo")
         echoOpts.add_argument('-e', '--echo', action = "store_true", help = "Start the Yowsup Echo client")
 
+        httpOpts = self.add_argument_group("HTTP Forwarder")
+        # httpOpts.add_argument('-f', '--http', action="store_true", help="Start the HTTP Forwarder",
+        #                       metavar=("url"))
+
+        httpOpts.add_argument('-f', '--http', action="store", help="HTTP Forwarder and reply",
+                              metavar=("url"), nargs=1)
+
         sendOpts = self.add_argument_group("Send client demo")
         sendOpts.add_argument('-s', '--send', action="store", help = "Send a message to specified phone number, "
                                                                      "wait for server receipt and exit",
@@ -270,6 +277,8 @@ class DemosArgParser(YowArgParser):
             self.startEcho()
         elif self.args["send"]:
             self.startSendClient()
+        elif self.args["http"]:
+            self.startHttpClient()
         elif self.args["sync"]:
             self.startSyncContacts()
         else:
@@ -305,6 +314,21 @@ class DemosArgParser(YowArgParser):
         try:
             self.printInfoText()
             stack = echoclient.YowsupEchoStack(credentials, not self.args["unmoxie"])
+            stack.start()
+        except KeyboardInterrupt:
+            print("\nYowsdown")
+            sys.exit(0)
+
+
+    def startHttpClient(self):
+        from yowsup.http import forwarder
+        credentials = self._getCredentials()
+        if not credentials:
+            print("Error: You must specify a configuration method")
+            sys.exit(1)
+        try:
+            self.printInfoText()
+            stack = forwarder.YowsupForwarderStack(credentials, not self.args["unmoxie"], self.args['http'][0])
             stack.start()
         except KeyboardInterrupt:
             print("\nYowsdown")
